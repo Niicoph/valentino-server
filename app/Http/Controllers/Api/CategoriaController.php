@@ -9,12 +9,8 @@ use Illuminate\Support\Facades\Storage;
 
 class CategoriaController extends Controller {
     
-
-    // Path: app/Http/Controllers/Api/CategoriaController.php
-    // CRUD operations for Categoria -> index (GET), store (POST), show (GET), update (PUT), destroy (DELETE)
-
     public function __construct() {
-        $this->middleware('auth:api', ['except' => ['index', 'show']]);
+        $this->middleware('auth.jwt', ['except' => ['index', 'show']]);
     }
 
     public function index() {
@@ -32,18 +28,19 @@ class CategoriaController extends Controller {
     
         $categoria = new Categoria($request->all());
     
-        // Obtén el nombre original de los archivos
-        $imgLightName = time() . '_' . $request->img_light->getClientOriginalName() . 'light';
-        $imgLightSelectedName = time() . '_' . $request->img_light_selected->getClientOriginalName() . 'light_selected';
-        $imgDarkName = time() . '_' . $request->img_dark->getClientOriginalName() . 'dark';
-        $imgDarkSelectedName = time() . '_' . $request->img_dark_selected->getClientOriginalName() . 'dark_selected';
+        // Genera un nombre único para cada imagen usando hashName()
+        $imgLightName = $request->img_light->hashName();
+        $imgLightSelectedName = $request->img_light_selected->hashName();
+        $imgDarkName = $request->img_dark->hashName();
+        $imgDarkSelectedName = $request->img_dark_selected->hashName();
     
-        // Guarda las imágenes con el nombre original
+        // Guarda las imágenes en la carpeta 'public/categorias' dentro de 'storage'
         $pathLight = $request->img_light->storeAs('public/categorias', $imgLightName);
         $pathLightSelected = $request->img_light_selected->storeAs('public/categorias', $imgLightSelectedName);
         $pathDark = $request->img_dark->storeAs('public/categorias', $imgDarkName);
         $pathDarkSelected = $request->img_dark_selected->storeAs('public/categorias', $imgDarkSelectedName);
     
+        // Almacena las rutas relativas en la base de datos
         $categoria->img_light = $pathLight;
         $categoria->img_light_selected = $pathLightSelected;
         $categoria->img_dark = $pathDark;
@@ -53,6 +50,8 @@ class CategoriaController extends Controller {
     
         return response()->json($categoria, 201);
     }
+    
+    
     
 
     public function show($id) {
